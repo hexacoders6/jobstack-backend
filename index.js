@@ -108,19 +108,22 @@ async function run() {
     const reportCollection = client
       .db("jobstack-database")
       .collection("post-report");
+    const userreportCollection = client
+      .db("jobstack-database")
+      .collection("user-report");
 
     // verify jwt this api sequre to website user must verify
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "5s",
+        expiresIn: "7d",
       });
       console.log(token);
       res.send({ token });
     });
 
     // allusers get this api just admin get      TO DO  verifyJWT
-    app.get("/users", verifyJWT, async (req, res) => {
+    app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -731,6 +734,17 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/user-report", async (req, res) => {
+      const result = await userreportCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/user-report", async (req, res) => {
+      const item = req.body;
+      const result = await userreportCollection.insertOne(item);
+      res.send(result);
+    });
+
     //  ************ CONNECT REQUEST HANDLE START *******************
 
     // Connect Request get api
@@ -1213,6 +1227,13 @@ async function run() {
         .find(query)
         .sort({ createdAt: -1 })
         .toArray();
+      res.send(result);
+    });
+
+    app.get("/user-article/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await articleCollection.findOne(query);
       res.send(result);
     });
 
