@@ -128,6 +128,7 @@ async function run() {
       res.send(result);
     });
 
+    // To Do
     // check admin
     app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
@@ -136,6 +137,19 @@ async function run() {
       const result = { admin: user?.role === "admin" };
       res.send(result);
     });
+
+    // app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+    //   const email = req.params.email;
+
+    //   if (req.decoded.email !== email) {
+    //     res.send({ admin: false });
+    //   }
+
+    //   const query = { email: email };
+    //   const user = await usersCollection.findOne(query);
+    //   const result = { admin: user?.role === "admin" };
+    //   res.send(result);
+    // });
 
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
@@ -498,7 +512,7 @@ async function run() {
     app.get("/bookMarkJobs/:email", async (req, res) => {
       console.log(req.params.email);
       const result = await bookmarkCollection
-        .find({ email: req.params.email })
+        .find({ bookmarkEmail: req.params.email })
         .toArray();
       res.send(result);
     });
@@ -1156,6 +1170,26 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/review/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: "aproved",
+        },
+      };
+      const result = await reviewCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.delete("/review/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewCollection.deleteOne(query);
+      res.send(result);
+    });
+
     app.post("/review", async (req, res) => {
       const item = req.body;
       const result = await reviewCollection.insertOne(item);
@@ -1230,7 +1264,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/user-article/:id", async (req, res) => {
+    app.get("/users-article/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await articleCollection.findOne(query);
@@ -1241,6 +1275,7 @@ async function run() {
 
     app.post("/user-article", async (req, res) => {
       const body = req.body;
+      body.createdAt = new Date();
       console.log(body);
       const result = await articleCollection.insertOne(body);
       if (result?.insertedId) {
