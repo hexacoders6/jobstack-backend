@@ -116,11 +116,24 @@ async function run() {
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "7d",
+        expiresIn: "1h",
       });
       console.log(token);
       res.send({ token });
     });
+
+    // Warning: use verifyJWT before using verifyAdmin
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "admin") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden message" });
+      }
+      next();
+    };
 
     // allusers get this api just admin get      TO DO  verifyJWT
     app.get("/users", async (req, res) => {
@@ -130,26 +143,27 @@ async function run() {
 
     // To Do
     // check admin
-    app.get("/users/admin/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = { email: email };
-      const user = await usersCollection.findOne(query);
-      const result = { admin: user?.role === "admin" };
-      res.send(result);
-    });
-
-    // app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+    // app.get("/users/admin/:email", async (req, res) => {
     //   const email = req.params.email;
-
-    //   if (req.decoded.email !== email) {
-    //     res.send({ admin: false });
-    //   }
-
     //   const query = { email: email };
     //   const user = await usersCollection.findOne(query);
     //   const result = { admin: user?.role === "admin" };
     //   res.send(result);
     // });
+
+    // extra code
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ admin: false });
+      }
+
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { admin: user?.role === "admin" };
+      res.send(result);
+    });
 
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
